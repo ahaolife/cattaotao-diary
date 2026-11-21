@@ -20,7 +20,7 @@ API key, cron task, or backend service.
 
 ## Editing
 
-- Add diary entries to `index.html`.
+- Add and maintain diary entries in `diary.json` (one object per date, unique `YYYY-MM-DD` dates). The page reads data from this file; do not hand-edit entry text into `index.html`.
 - Update descriptions and project copy in `about.html`.
-- Keep the `.date-tab`, `.screen`, `.screen.active`, `showDate()`, `toggleTheme()`, and `.typing` structures.
-- Use `README.md` and `README_zh.md` for Chinese project documentation.
+- Keep the `.date-tab`, `#diary-content`, `showDate()`, `setTheme()`, `.typing`, and calendar dialog (`#calendar-backdrop`) structures in `index.html`.
+- Keep `README.md` and `README_zh.md` identical as Chinese project documentation.

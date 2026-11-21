@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#fffaf4">
     <title>桃桃的日记本</title>
+    <script>
+        (function () {
+            try {
+                var theme = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) { /* Storage may be disabled. */ }
+        })();
+    </script>
     <style>
         :root {
             color-scheme: light;
@@ -60,8 +68,7 @@
         .container { max-width: 56rem; margin: 0 auto; }
 
         .header-card,
-        .screen-container,
-        .tools-card {
+        .screen-container {
             overflow: hidden;
             border: 1px solid var(--border);
             border-radius: 24px;
@@ -70,6 +77,7 @@
         }
 
         .header-card { margin-bottom: 18px; }
+        .screen-container { overflow: visible; }
 
         .header-bar,
         .entry-bar {
@@ -103,7 +111,7 @@
 
         .theme-button,
         .date-tab,
-        .tool-control,
+        .search-toggle,
         .diary-nav button,
         .print-button {
             border: 1px solid var(--border);
@@ -118,6 +126,14 @@
             height: 36px;
             border-radius: 50%;
             font-size: 15px;
+        }
+
+        .search-toggle {
+            flex: 0 0 auto;
+            min-height: 36px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 12px;
         }
 
         .header-content {
@@ -163,217 +179,140 @@
 
         @keyframes blink { 50% { border-color: transparent; } }
 
-        .tools-card { margin-bottom: 16px; }
-
-        .tools-heading {
-            padding: 10px 16px;
-            border-bottom: 1px solid var(--border);
-            background: var(--surface-warm);
-            font-size: 13px;
-            font-weight: 700;
+        .calendar-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background: rgba(54, 44, 42, 0.42);
         }
 
-        .local-notice,
-        .restore-card,
-        .editor-card {
-            margin-bottom: 16px;
+        .calendar-backdrop[hidden] { display: none; }
+
+        .calendar-sheet {
+            width: min(100%, 30rem);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            padding: 18px;
             border: 1px solid var(--border);
-            border-radius: 18px;
+            border-radius: 24px;
             background: var(--surface);
-            box-shadow: var(--shadow);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.24);
         }
 
-        .management-card { margin-bottom: 16px; }
-        .local-notice,
-        .restore-card { padding: 14px 16px; color: var(--muted); font-size: 13px; }
-        .local-notice strong, .restore-card strong { color: var(--fg); }
-        .local-notice p { margin-top: 6px; }
-        .local-notice[hidden], .restore-card[hidden], .editor-form[hidden] { display: none; }
-        .restore-card { border-color: var(--pink); background: var(--surface-warm); }
-
-        .restore-actions,
-        .editor-actions,
-        .management-actions {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .restore-actions { margin-top: 10px; }
-
-        .management-actions {
-            justify-content: flex-end;
-            padding: 12px 16px;
-        }
-
-        .management-button,
-        .restore-button,
-        .editor-submit {
-            min-height: 36px;
-            padding: 7px 12px;
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            background: var(--surface);
-            color: var(--fg);
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .management-button.primary,
-        .editor-submit {
-            border-color: var(--pink);
-            background: var(--pink);
-            color: #fff;
-        }
-
-        .management-button.danger { border-color: #bf7771; color: #a64d49; }
-        .management-button:disabled { opacity: 0.45; cursor: default; }
-
-        .import-label { display: inline-flex; align-items: center; }
-        .visually-hidden {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            clip-path: inset(50%);
-        }
-
-        .editor-summary {
+        .calendar-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 12px 16px;
-            background: var(--surface-warm);
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 700;
-            list-style: none;
+            margin-bottom: 14px;
         }
 
-        .editor-summary::-webkit-details-marker { display: none; }
-        .editor-summary::after { content: "＋"; color: var(--pink); font-size: 18px; }
-        .editor-card[open] .editor-summary::after { content: "−"; }
-        .editor-form { padding: 16px; }
+        .calendar-title { font-size: 15px; font-weight: 700; }
+        .calendar-actions { display: flex; align-items: center; gap: 8px; }
 
-        .editor-grid {
+        .calendar-nav,
+        .calendar-close {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-        }
-
-        .editor-field { display: grid; min-width: 0; gap: 5px; }
-        .editor-field.full { grid-column: 1 / -1; }
-        .editor-label { color: var(--muted); font-size: 12px; }
-        .editor-control {
-            width: 100%;
-            min-width: 0;
-            min-height: 40px;
-            padding: 8px 10px;
+            width: 32px;
+            height: 32px;
+            place-items: center;
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 50%;
             background: var(--surface);
             color: var(--fg);
-            font: inherit;
-            font-size: 13px;
+            cursor: pointer;
+            font-size: 14px;
         }
 
-        textarea.editor-control { min-height: 92px; resize: vertical; }
-        .editor-status { min-height: 22px; margin-top: 8px; color: var(--muted); font-size: 12px; }
-        .editor-actions { justify-content: flex-end; margin-top: 10px; }
+        .calendar-nav:hover,
+        .calendar-close:hover { border-color: var(--pink); }
 
-        .tools-body {
+        .calendar-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(220px, 0.7fr);
-            gap: 16px;
-            padding: 16px;
-        }
-
-        .tool-field { display: grid; gap: 6px; }
-        .tool-label { color: var(--muted); font-size: 12px; }
-
-        .tool-control {
-            width: 100%;
-            min-height: 42px;
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-size: 13px;
-        }
-
-        .filter-results {
-            padding: 0 16px 16px;
-        }
-
-        .filter-summary { margin-bottom: 8px; color: var(--muted); font-size: 12px; }
-
-        .result-list {
-            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 6px;
-            max-height: 220px;
-            overflow-y: auto;
-            list-style: none;
         }
 
-        .result-button {
-            display: flex;
-            width: 100%;
-            align-items: baseline;
-            gap: 12px;
-            padding: 8px 10px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: var(--surface);
+        .calendar-weekday {
+            padding-bottom: 4px;
+            color: var(--muted);
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .calendar-day {
+            display: grid;
+            align-content: start;
+            gap: 2px;
+            min-height: 58px;
+            padding: 6px 4px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            background: var(--surface-warm);
             color: var(--fg);
-            cursor: pointer;
-            text-align: left;
+            text-align: center;
         }
 
-        .result-button:hover { border-color: var(--pink); }
-        .result-date { flex: 0 0 auto; color: var(--pink); font-size: 12px; }
-        .result-title { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+        .calendar-day.empty { background: transparent; }
+        .calendar-day.has-entry { cursor: pointer; border-color: var(--border); }
+        .calendar-day.has-entry:hover { border-color: var(--pink); }
+        .calendar-day.current { border-color: var(--pink); box-shadow: inset 0 0 0 1px var(--pink); }
+        .calendar-day-number { font-size: 13px; font-weight: 700; }
+
+        .calendar-day-mood {
+            display: -webkit-box;
+            overflow: hidden;
+            color: var(--pink);
+            font-size: 10px;
+            line-height: 1.2;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .calendar-hint { margin-top: 12px; color: var(--muted); font-size: 11px; text-align: center; }
+
+        .diary-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
 
         .date-tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 18px;
+            flex: 1;
+            gap: 10px;
             overflow-x: auto;
-            padding: 4px 2px 8px;
+            padding: 4px 2px 10px;
             scrollbar-width: thin;
         }
 
         .date-tab {
+            display: grid;
             flex: 0 0 auto;
-            padding: 8px 14px;
-            border-radius: 999px;
-            font-size: 12px;
-            white-space: nowrap;
+            gap: 2px;
+            min-width: 96px;
+            padding: 8px 12px;
+            border-radius: 16px;
+            text-align: left;
             transition: 0.2s ease;
         }
 
+        .date-tab-day { font-size: 13px; font-weight: 700; white-space: nowrap; }
+        .date-tab-mood { color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .date-tab:hover { border-color: var(--pink); }
-        .date-tab.active { border-color: var(--pink); background: var(--pink); color: #fff; }
+        .date-tab.active { border-color: #a85d5a; background: #a85d5a; color: #fff; }
+        .date-tab.active .date-tab-mood { color: rgba(255, 255, 255, 0.92); }
 
         .entry-status { color: var(--pink); font-size: 12px; }
         .entry-body { padding: 22px; }
-        .entry-title { margin-bottom: 12px; font-size: 18px; }
-        .entry-content, .entry-note { color: var(--muted); font-size: 14px; }
-        .entry-content p, .entry-note p { margin-bottom: 10px; white-space: pre-wrap; }
-        .entry-content p:last-child, .entry-note p:last-child { margin-bottom: 0; }
-
-        .quote-box {
-            margin-top: 16px;
-            padding: 14px 16px;
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--pink-soft);
-            border-radius: 14px;
-            background: var(--surface-warm);
-        }
-
-        .quote-title { margin-bottom: 6px; color: var(--pink); font-weight: 700; }
+        .entry-content { color: var(--fg); font-size: 15px; line-height: 2; }
+        .entry-content p { margin-bottom: 18px; white-space: pre-wrap; }
+        .entry-content p:last-child { margin-bottom: 0; }
         .entry-image { display: block; max-width: 100%; max-height: 32rem; margin: 18px auto 0; border-radius: 14px; object-fit: contain; }
         .entry-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; list-style: none; }
         .entry-tag { padding: 3px 10px; border-radius: 999px; background: var(--pink-soft); color: var(--pink); font-size: 11px; }
@@ -411,9 +350,11 @@
             .title-wrap { padding: 26px 22px; }
             .cover-wrap { height: 180px; min-height: 180px; border-top: 1px solid var(--border); border-left: 0; }
             .cover-wrap img { min-height: 180px; }
-            .tools-body { grid-template-columns: 1fr; gap: 12px; }
-            .management-actions { justify-content: flex-start; }
+            .diary-toolbar { align-items: stretch; flex-direction: column; }
             .entry-body { padding: 18px 16px; }
+            .calendar-backdrop { padding: 12px; }
+            .calendar-sheet { padding: 14px; }
+            .calendar-day { min-height: 52px; padding: 5px 2px; }
         }
 
         @media (max-width: 420px) {
@@ -421,14 +362,12 @@
             .entry-bar { flex-direction: column; gap: 2px; }
             .diary-nav { gap: 6px; }
             .diary-nav button { padding: 8px 10px; }
-            .editor-grid { grid-template-columns: 1fr; }
-            .editor-field.full { grid-column: auto; }
         }
 
         @media print {
             body { padding: 0; background: #fff; color: #222; }
-            .header-card, .screen-container, .tools-card { box-shadow: none; }
-            .date-tabs, .tools-card, .local-notice, .restore-card, .management-card, .editor-card, .diary-nav,
+            .header-card, .screen-container { box-shadow: none; }
+            .diary-toolbar, .calendar-backdrop, .diary-nav,
             .theme-button, .print-button, footer { display: none !important; }
             .header-card { margin-bottom: 12px; }
             .cover-wrap { display: none; }
@@ -460,101 +399,12 @@
             </div>
         </header>
 
-        <section class="tools-card" aria-labelledby="tools-heading">
-            <h2 class="tools-heading" id="tools-heading">寻找一段日记</h2>
-            <div class="tools-body">
-                <label class="tool-field" for="diary-search">
-                    <span class="tool-label">搜索日期、标题、正文、天气、心情或标签</span>
-                    <input class="tool-control" id="diary-search" type="search" placeholder="输入关键词…" autocomplete="off">
-                </label>
-                <label class="tool-field" for="month-filter">
-                    <span class="tool-label">月份归档</span>
-                    <select class="tool-control" id="month-filter">
-                        <option value="">所有月份</option>
-                    </select>
-                </label>
-            </div>
-            <div class="filter-results" id="filter-results" hidden aria-live="polite">
-                <p class="filter-summary" id="filter-summary"></p>
-                <ul class="result-list" id="result-list"></ul>
-            </div>
-        </section>
+        <div class="diary-toolbar">
+            <nav class="date-tabs" id="date-tabs" aria-label="日记日期"></nav>
+            <button class="search-toggle" id="calendar-toggle" type="button" aria-expanded="false" aria-controls="calendar-backdrop">📅 寻找日记</button>
+        </div>
 
-        <aside class="local-notice" role="status">
-            <strong>本地草稿与备份：</strong>新增、编辑和删除只保存在此浏览器，不会改写仓库中的 <code>diary.json</code>，也不会跨设备同步。请定期导出 JSON 备份；要发布修改，请把导出的文件替换仓库里的 <code>diary.json</code>。
-            <p id="backup-status" aria-live="polite">当前展示仓库中的 diary.json；尚无本地草稿修改。</p>
-        </aside>
-
-        <section class="restore-card" id="restore-card" hidden aria-live="polite">
-            <p id="restore-message"></p>
-            <div class="restore-actions">
-                <button class="restore-button" id="restore-draft" type="button">恢复本地草稿</button>
-                <button class="restore-button" id="discard-draft" type="button">忽略并删除草稿</button>
-            </div>
-        </section>
-
-        <section class="management-card" aria-label="日记管理">
-            <div class="management-actions">
-                <button class="management-button primary" id="new-entry" type="button">新增日记</button>
-                <button class="management-button" id="edit-entry" type="button" disabled>编辑本篇</button>
-                <button class="management-button danger" id="delete-entry" type="button" disabled>删除本篇</button>
-                <label class="management-button import-label" for="import-file">导入 JSON</label>
-                <input class="visually-hidden" id="import-file" type="file" accept=".json,application/json">
-                <button class="management-button" id="export-json" type="button">导出完整 JSON</button>
-            </div>
-            <details class="editor-card" id="entry-editor" hidden>
-                <summary class="editor-summary" id="editor-heading">新增日记</summary>
-                <form class="editor-form" id="entry-form">
-                    <div class="editor-grid">
-                        <label class="editor-field">
-                            <span class="editor-label">日期</span>
-                            <input class="editor-control" name="date" type="date" required>
-                        </label>
-                        <label class="editor-field">
-                            <span class="editor-label">标题</span>
-                            <input class="editor-control" name="title" type="text" maxlength="120" required>
-                        </label>
-                        <label class="editor-field">
-                            <span class="editor-label">天气</span>
-                            <input class="editor-control" name="weather" type="text" maxlength="40">
-                        </label>
-                        <label class="editor-field">
-                            <span class="editor-label">心情</span>
-                            <input class="editor-control" name="mood" type="text" maxlength="80">
-                        </label>
-                        <label class="editor-field full">
-                            <span class="editor-label">正文（每段之间空一行）</span>
-                            <textarea class="editor-control" name="content" rows="5"></textarea>
-                        </label>
-                        <label class="editor-field">
-                            <span class="editor-label">小记标题</span>
-                            <input class="editor-control" name="noteTitle" type="text" maxlength="60" placeholder="今日小确幸">
-                        </label>
-                        <label class="editor-field">
-                            <span class="editor-label">标签（用逗号分隔）</span>
-                            <input class="editor-control" name="tags" type="text" placeholder="晒太阳，午觉">
-                        </label>
-                        <label class="editor-field full">
-                            <span class="editor-label">小记（可选）</span>
-                            <textarea class="editor-control" name="note" rows="3"></textarea>
-                        </label>
-                        <label class="editor-field full">
-                            <span class="editor-label">配图路径（可选，不提供上传）</span>
-                            <input class="editor-control" name="image" type="text" placeholder="assets/taotao-home.png">
-                        </label>
-                    </div>
-                    <p class="editor-status" id="editor-status" role="status" aria-live="polite"></p>
-                    <div class="editor-actions">
-                        <button class="management-button" id="cancel-edit" type="button">取消</button>
-                        <button class="editor-submit" type="submit">保存到本地草稿</button>
-                    </div>
-                </form>
-            </details>
-        </section>
-
-        <nav class="date-tabs" id="date-tabs" aria-label="日记日期" tabindex="0"></nav>
-
-        <main class="screen-container" id="diary-content" aria-live="polite">
+        <main class="screen-container" id="diary-content">
             <p class="empty-state">正在读取日记…</p>
         </main>
 
@@ -569,24 +419,34 @@
         </footer>
     </div>
 
+    <div class="calendar-backdrop" id="calendar-backdrop" hidden>
+        <section class="calendar-sheet" role="dialog" aria-modal="true" aria-labelledby="calendar-title">
+            <div class="calendar-head">
+                <div class="calendar-actions">
+                    <button class="calendar-nav" id="calendar-prev" type="button" aria-label="上个月">‹</button>
+                    <span class="calendar-title" id="calendar-title"></span>
+                    <button class="calendar-nav" id="calendar-next" type="button" aria-label="下个月">›</button>
+                </div>
+                <button class="calendar-close" id="calendar-close" type="button" aria-label="关闭日历">×</button>
+            </div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+            <p class="calendar-hint">点有心情标记的日子，翻开那天的小日记。</p>
+        </section>
+    </div>
+
     <script>
-        const DRAFT_KEY = 'taotao-diary-local-draft-v1';
-        const diaryState = { entries: [], currentDate: null, editingDate: null };
+        const diaryState = { entries: [], currentDate: null };
         const dateTabs = document.getElementById('date-tabs');
         const diaryContent = document.getElementById('diary-content');
-        const searchInput = document.getElementById('diary-search');
-        const monthFilter = document.getElementById('month-filter');
-        const resultList = document.getElementById('result-list');
-        const filterSummary = document.getElementById('filter-summary');
-        const entryEditor = document.getElementById('entry-editor');
-        const entryForm = document.getElementById('entry-form');
-        const editorStatus = document.getElementById('editor-status');
-        const backupStatus = document.getElementById('backup-status');
-        let pendingDraft = null;
-
-        function readPreference(key) {
-            try { return window.localStorage.getItem(key); } catch { return null; }
-        }
+        const calendarBackdrop = document.getElementById('calendar-backdrop');
+        const calendarGrid = document.getElementById('calendar-grid');
+        const calendarTitle = document.getElementById('calendar-title');
+        const calendarToggle = document.getElementById('calendar-toggle');
+        const calendarSheet = document.querySelector('.calendar-sheet');
+        const pageRoot = document.querySelector('.container');
+        let calendarYear = 0;
+        let calendarMonth = 0;
+        let lastFocusedBeforeCalendar = null;
 
         function savePreference(key, value) {
             try { window.localStorage.setItem(key, value); return true; } catch { return false; }
@@ -603,11 +463,119 @@
             if (persist) savePreference('theme', selectedTheme);
         }
 
-        setTheme(readPreference('theme') || 'light', false);
+        setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light', false);
         document.getElementById('theme-button').addEventListener('click', () => {
             setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
         });
         document.getElementById('print-button').addEventListener('click', () => window.print());
+
+        function localToday() {
+            const now = new Date();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${now.getFullYear()}-${month}-${day}`;
+        }
+
+        function openCalendar() {
+            lastFocusedBeforeCalendar = document.activeElement;
+            const base = diaryState.currentDate
+                ? diaryState.currentDate
+                : (diaryState.entries[diaryState.entries.length - 1]?.date || localToday());
+            const [year, month] = base.split('-').map(Number);
+            calendarYear = year;
+            calendarMonth = month - 1;
+            renderCalendar();
+            calendarBackdrop.hidden = false;
+            calendarToggle.setAttribute('aria-expanded', 'true');
+            if ('inert' in HTMLElement.prototype) pageRoot.inert = true;
+            document.getElementById('calendar-close').focus();
+        }
+
+        function closeCalendar() {
+            calendarBackdrop.hidden = true;
+            calendarToggle.setAttribute('aria-expanded', 'false');
+            if ('inert' in HTMLElement.prototype) pageRoot.inert = false;
+            const target = lastFocusedBeforeCalendar && document.contains(lastFocusedBeforeCalendar)
+                ? lastFocusedBeforeCalendar : calendarToggle;
+            target.focus();
+            lastFocusedBeforeCalendar = null;
+        }
+
+        function trapCalendarFocus(event) {
+            if (calendarBackdrop.hidden || event.key !== 'Tab') return;
+            const focusables = Array.from(calendarSheet.querySelectorAll('button, [role="button"][tabindex="0"]'))
+                .filter((element) => !element.disabled);
+            if (!focusables.length) return;
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+
+        function renderCalendar() {
+            calendarTitle.textContent = `${calendarYear} 年 ${calendarMonth + 1} 月`;
+            calendarGrid.replaceChildren();
+            ['日', '一', '二', '三', '四', '五', '六'].forEach((label) => {
+                calendarGrid.appendChild(makeElement('div', 'calendar-weekday', label));
+            });
+
+            const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+            const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+            const entriesByDate = new Map(diaryState.entries.map((entry) => [entry.date, entry]));
+
+            for (let i = 0; i < firstDay; i += 1) {
+                calendarGrid.appendChild(makeElement('div', 'calendar-day empty'));
+            }
+
+            for (let day = 1; day <= daysInMonth; day += 1) {
+                const date = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const entry = entriesByDate.get(date);
+                const cell = makeElement('div', 'calendar-day');
+                cell.appendChild(makeElement('span', 'calendar-day-number', String(day)));
+                if (entry) {
+                    cell.classList.add('has-entry');
+                    cell.appendChild(makeElement('span', 'calendar-day-mood', entry.mood || entry.title));
+                    cell.title = `${date} · ${entry.title}`;
+                    cell.setAttribute('aria-label', `${date}，${entry.title}，心情${entry.mood || '未记录'}`);
+                    if (date === diaryState.currentDate) cell.classList.add('current');
+                    cell.tabIndex = 0;
+                    cell.setAttribute('role', 'button');
+                    const jump = () => {
+                        closeCalendar();
+                        showDate(date);
+                    };
+                    cell.addEventListener('click', jump);
+                    cell.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            jump();
+                        }
+                    });
+                }
+                calendarGrid.appendChild(cell);
+            }
+        }
+
+        calendarToggle.addEventListener('click', openCalendar);
+        document.getElementById('calendar-close').addEventListener('click', closeCalendar);
+        document.getElementById('calendar-prev').addEventListener('click', () => {
+            calendarMonth -= 1;
+            if (calendarMonth < 0) { calendarMonth = 11; calendarYear -= 1; }
+            renderCalendar();
+        });
+        document.getElementById('calendar-next').addEventListener('click', () => {
+            calendarMonth += 1;
+            if (calendarMonth > 11) { calendarMonth = 0; calendarYear += 1; }
+            renderCalendar();
+        });
+        calendarBackdrop.addEventListener('click', (event) => {
+            if (event.target === calendarBackdrop) closeCalendar();
+        });
 
         function typeWriter() {
             document.querySelectorAll('.typing').forEach((element) => {
@@ -645,6 +613,13 @@
             return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
         }
 
+        function safeImagePath(value) {
+            if (typeof value !== 'string') return '';
+            const path = value.trim();
+            if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(path)) return '';
+            return path;
+        }
+
         function normalizeEntry(item) {
             if (!item || typeof item !== 'object' || Array.isArray(item) || !isValidDate(item.date)) return null;
             const content = Array.isArray(item.content)
@@ -657,9 +632,8 @@
                 mood: typeof item.mood === 'string' ? item.mood : '',
                 content,
                 note: typeof item.note === 'string' ? item.note : '',
-                noteTitle: typeof item.noteTitle === 'string' ? item.noteTitle : '今日小确幸',
                 tags: Array.isArray(item.tags) ? item.tags.filter((tag) => typeof tag === 'string' && tag.trim()) : [],
-                image: typeof item.image === 'string' ? item.image.trim() : ''
+                image: safeImagePath(item.image)
             };
         }
 
@@ -694,20 +668,15 @@
             article.appendChild(bar);
 
             const body = makeElement('div', 'entry-body');
-            body.appendChild(makeElement('h2', 'entry-title', entry.title));
             const content = makeElement('div', 'entry-content');
-            renderParagraphs(content, entry.content);
-            if (!entry.content.length) content.appendChild(makeElement('p', '', '这篇日记还没有正文。'));
+            const paragraphs = [
+                entry.title,
+                ...entry.content,
+                ...(entry.note ? entry.note.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean) : [])
+            ].filter(Boolean);
+            renderParagraphs(content, paragraphs);
+            if (!paragraphs.length) content.appendChild(makeElement('p', '', '这篇日记还没有正文。'));
             body.appendChild(content);
-
-            if (entry.note) {
-                const noteBox = makeElement('section', 'quote-box');
-                noteBox.appendChild(makeElement('h3', 'quote-title', entry.noteTitle));
-                const noteContent = makeElement('div', 'entry-note');
-                renderParagraphs(noteContent, entry.note.split(/\n\s*\n/).filter(Boolean));
-                noteBox.appendChild(noteContent);
-                body.appendChild(noteBox);
-            }
 
             if (entry.tags.length) {
                 const tags = makeElement('ul', 'entry-tags');
@@ -738,8 +707,10 @@
             const visibleCount = 7;
             const start = Math.max(0, Math.min(activeIndex - 3, diaryState.entries.length - visibleCount));
             diaryState.entries.slice(start, start + visibleCount).forEach((entry) => {
-                const button = makeElement('button', 'date-tab', entry.date);
+                const button = makeElement('button', 'date-tab');
                 button.type = 'button';
+                button.appendChild(makeElement('span', 'date-tab-day', entry.date));
+                button.appendChild(makeElement('span', 'date-tab-mood', entry.mood || entry.title));
                 button.classList.toggle('active', entry.date === diaryState.currentDate);
                 button.setAttribute('aria-current', entry.date === diaryState.currentDate ? 'date' : 'false');
                 button.addEventListener('click', () => showDate(entry.date));
@@ -765,55 +736,10 @@
             document.getElementById('next-diary').disabled = index < 0 || index >= diaryState.entries.length - 1;
             document.getElementById('diary-position').textContent = index < 0
                 ? '' : `第 ${index + 1} 篇 / 共 ${diaryState.entries.length} 篇`;
-            document.getElementById('edit-entry').disabled = index < 0;
-            document.getElementById('delete-entry').disabled = index < 0;
-        }
-
-        function renderMonthOptions() {
-            const selectedMonth = monthFilter.value;
-            monthFilter.replaceChildren(new Option('所有月份', ''));
-            const months = [...new Set(diaryState.entries.map((entry) => entry.date.slice(0, 7)))].sort().reverse();
-            months.forEach((month) => {
-                const [year, monthNumber] = month.split('-');
-                monthFilter.add(new Option(`${year} 年 ${Number(monthNumber)} 月`, month));
-            });
-            if (months.includes(selectedMonth)) monthFilter.value = selectedMonth;
-        }
-
-        function updateFilterResults() {
-            const query = searchInput.value.trim().toLocaleLowerCase();
-            const month = monthFilter.value;
-            const isFiltering = Boolean(query || month);
-            const resultPanel = document.getElementById('filter-results');
-            resultPanel.hidden = !isFiltering;
-            if (!isFiltering) return;
-
-            const matches = diaryState.entries.filter((entry) => {
-                const matchesMonth = !month || entry.date.startsWith(month);
-                const searchableText = [
-                    entry.date, entry.title, entry.weather, entry.mood, entry.content.join(' '),
-                    entry.note, entry.noteTitle, entry.tags.join(' ')
-                ].join(' ').toLocaleLowerCase();
-                return matchesMonth && (!query || searchableText.includes(query));
-            }).slice().reverse();
-
-            filterSummary.textContent = matches.length ? `找到 ${matches.length} 篇日记` : '没有找到符合条件的日记。';
-            resultList.replaceChildren();
-            matches.forEach((entry) => {
-                const item = document.createElement('li');
-                const button = makeElement('button', 'result-button');
-                button.type = 'button';
-                button.appendChild(makeElement('span', 'result-date', entry.date));
-                button.appendChild(makeElement('span', 'result-title', entry.title));
-                button.addEventListener('click', () => showDate(entry.date));
-                item.appendChild(button);
-                resultList.appendChild(item);
-            });
         }
 
         function renderCollection(preferredDate) {
             sortEntries(diaryState.entries);
-            renderMonthOptions();
             if (diaryState.entries.length) {
                 const date = diaryState.entries.some((entry) => entry.date === preferredDate)
                     ? preferredDate : diaryState.entries[diaryState.entries.length - 1].date;
@@ -823,14 +749,13 @@
                 window.history.replaceState({ date }, '', url);
             } else {
                 diaryState.currentDate = null;
-                renderEmptyState('还没有日记，可新增日记或导入完整 JSON。');
+                renderEmptyState('还没有日记。');
                 renderDateTabs();
                 updateNavigation();
                 const url = new URL(window.location.href);
                 url.hash = '';
                 window.history.replaceState({}, '', url);
             }
-            updateFilterResults();
         }
 
         function showDate(date, updateAddress = true) {
@@ -854,14 +779,18 @@
 
         document.getElementById('prev-diary').addEventListener('click', () => navigateDiary(-1));
         document.getElementById('next-diary').addEventListener('click', () => navigateDiary(1));
-        searchInput.addEventListener('input', updateFilterResults);
-        monthFilter.addEventListener('change', updateFilterResults);
 
         document.addEventListener('keydown', (event) => {
+            trapCalendarFocus(event);
+            if (event.key === 'Escape' && !calendarBackdrop.hidden) {
+                closeCalendar();
+                return;
+            }
             const target = event.target;
-            if (event.altKey || event.ctrlKey || event.metaKey ||
+            if (!calendarBackdrop.hidden || event.altKey || event.ctrlKey || event.metaKey ||
                 target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement ||
-                target instanceof HTMLSelectElement || target.isContentEditable) return;
+                target instanceof HTMLSelectElement || target instanceof HTMLButtonElement ||
+                target instanceof HTMLAnchorElement || target.isContentEditable) return;
             if (event.key === 'ArrowLeft' && !document.getElementById('prev-diary').disabled) {
                 event.preventDefault();
                 navigateDiary(-1);
@@ -874,229 +803,35 @@
 
         window.addEventListener('popstate', () => {
             const date = window.location.hash.slice(1);
-            if (diaryState.entries.some((entry) => entry.date === date)) showDate(date, false);
-            else if (diaryState.entries.length) showDate(diaryState.entries[diaryState.entries.length - 1].date, false);
+            if (diaryState.entries.some((entry) => entry.date === date)) {
+                showDate(date, false);
+                return;
+            }
+            if (diaryState.entries.length) {
+                const fallback = diaryState.entries[diaryState.entries.length - 1].date;
+                showDate(fallback, false);
+                const url = new URL(window.location.href);
+                url.hash = fallback;
+                window.history.replaceState({ date: fallback }, '', url);
+            }
         });
 
         document.getElementById('home-image').addEventListener('error', (event) => {
             event.currentTarget.closest('.cover-wrap').hidden = true;
         }, { once: true });
 
-        function showRestorePrompt(draft) {
-            pendingDraft = draft;
-            const card = document.getElementById('restore-card');
-            const message = document.getElementById('restore-message');
-            const restoreButton = document.getElementById('restore-draft');
-            card.hidden = false;
-            if (draft.error) {
-                message.textContent = '发现无法读取的本地草稿；它不会覆盖仓库日记。可清除损坏草稿后继续。';
-                restoreButton.disabled = true;
-                document.getElementById('discard-draft').textContent = '清除损坏草稿';
-            } else {
-                const savedAt = draft.savedAt ? new Date(draft.savedAt).toLocaleString('zh-CN') : '时间未知';
-                message.textContent = `发现 ${draft.entries.length} 篇本地草稿（${savedAt}）。恢复后将以草稿覆盖本次浏览器中的仓库展示；原始 diary.json 不会被修改。`;
-                restoreButton.disabled = false;
-                document.getElementById('discard-draft').textContent = '忽略并删除草稿';
-            }
-        }
-
-        function readLocalDraft() {
-            let raw;
-            try { raw = window.localStorage.getItem(DRAFT_KEY); } catch { return null; }
-            if (!raw) return null;
-            try {
-                const parsed = JSON.parse(raw);
-                if (parsed.version !== 1 || !Array.isArray(parsed.entries)) return { error: true };
-                const entries = parsed.entries.map(normalizeEntry);
-                if (entries.some((entry) => !entry) || new Set(entries.map((entry) => entry.date)).size !== entries.length) {
-                    return { error: true };
-                }
-                return { entries: sortEntries(entries), savedAt: parsed.savedAt || '' };
-            } catch {
-                return { error: true };
-            }
-        }
-
-        document.getElementById('restore-draft').addEventListener('click', () => {
-            if (!pendingDraft || pendingDraft.error) return;
-            const previousDate = diaryState.currentDate;
-            diaryState.entries = pendingDraft.entries;
-            document.getElementById('restore-card').hidden = true;
-            backupStatus.textContent = '已恢复本地草稿。它只保存在此浏览器中；导出 JSON 备份并替换仓库 diary.json 才能发布。';
-            renderCollection(previousDate);
-            pendingDraft = null;
-        });
-
-        document.getElementById('discard-draft').addEventListener('click', () => {
-            try { window.localStorage.removeItem(DRAFT_KEY); } catch { /* Storage may be disabled. */ }
-            document.getElementById('restore-card').hidden = true;
-            backupStatus.textContent = '已忽略本地草稿，当前显示仓库中的 diary.json。';
-            pendingDraft = null;
-        });
-
-        function saveDraft() {
-            const payload = {
-                version: 1,
-                savedAt: new Date().toISOString(),
-                entries: sortEntries(diaryState.entries).map((entry) => ({ ...entry, content: [...entry.content], tags: [...entry.tags] }))
-            };
-            try {
-                window.localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
-                backupStatus.textContent = `本地草稿已保存（${new Date(payload.savedAt).toLocaleString('zh-CN')}），仅此浏览器可见。请导出 JSON 备份；要发布请替换仓库 diary.json。`;
-                return true;
-            } catch {
-                backupStatus.textContent = '浏览器无法保存本地草稿（可能是存储空间或权限不足）。请立即导出 JSON 备份。';
-                return false;
-            }
-        }
-
-        function setEditorStatus(message, isError = false) {
-            editorStatus.textContent = message;
-            editorStatus.style.color = isError ? '#a64d49' : '';
-        }
-
-        function openEditor(mode) {
-            const values = entryForm.elements;
-            const editing = mode === 'edit'
-                ? diaryState.entries.find((entry) => entry.date === diaryState.currentDate)
-                : null;
-            if (mode === 'edit' && !editing) return;
-            diaryState.editingDate = editing ? editing.date : null;
-            entryForm.reset();
-            values.namedItem('date').value = editing ? editing.date : nextAvailableDate();
-            values.namedItem('title').value = editing ? editing.title : '';
-            values.namedItem('weather').value = editing ? editing.weather : '';
-            values.namedItem('mood').value = editing ? editing.mood : '';
-            values.namedItem('content').value = editing ? editing.content.join('\n\n') : '';
-            values.namedItem('noteTitle').value = editing ? editing.noteTitle : '今日小确幸';
-            values.namedItem('note').value = editing ? editing.note : '';
-            values.namedItem('tags').value = editing ? editing.tags.join('，') : '';
-            values.namedItem('image').value = editing ? editing.image : '';
-            document.getElementById('editor-heading').textContent = editing ? `编辑日记 · ${editing.date}` : '新增日记';
-            setEditorStatus('');
-            entryEditor.hidden = false;
-            entryEditor.open = true;
-            entryEditor.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-        function dateInputValue(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        function nextAvailableDate() {
-            const occupied = new Set(diaryState.entries.map((entry) => entry.date));
-            const date = new Date();
-            date.setHours(12, 0, 0, 0);
-            while (occupied.has(dateInputValue(date))) date.setDate(date.getDate() + 1);
-            return dateInputValue(date);
-        }
-
-        document.getElementById('new-entry').addEventListener('click', () => openEditor('new'));
-        document.getElementById('edit-entry').addEventListener('click', () => openEditor('edit'));
-        document.getElementById('cancel-edit').addEventListener('click', () => {
-            entryEditor.open = false;
-            setEditorStatus('');
-        });
-
-        entryForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const form = new FormData(entryForm);
-            const date = String(form.get('date') || '');
-            if (!isValidDate(date)) {
-                setEditorStatus('请选择有效日期。', true);
-                return;
-            }
-            const title = String(form.get('title') || '').trim();
-            if (!title) {
-                setEditorStatus('请填写日记标题。', true);
-                return;
-            }
-            const conflict = diaryState.entries.find((entry) => entry.date === date && entry.date !== diaryState.editingDate);
-            if (conflict) {
-                setEditorStatus('这一天已有日记；请编辑原日记，或选择其他日期。', true);
-                return;
-            }
-            const updatedEntry = normalizeEntry({
-                date,
-                title,
-                weather: String(form.get('weather') || '').trim(),
-                mood: String(form.get('mood') || '').trim(),
-                content: String(form.get('content') || '').split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean),
-                noteTitle: String(form.get('noteTitle') || '').trim() || '今日小确幸',
-                note: String(form.get('note') || '').trim(),
-                tags: String(form.get('tags') || '').split(/[,，]/).map((tag) => tag.trim()).filter(Boolean),
-                image: String(form.get('image') || '').trim()
-            });
-            const existingIndex = diaryState.entries.findIndex((entry) => entry.date === diaryState.editingDate);
-            if (existingIndex >= 0) diaryState.entries.splice(existingIndex, 1, updatedEntry);
-            else diaryState.entries.push(updatedEntry);
-            sortEntries(diaryState.entries);
-            saveDraft();
-            renderCollection(date);
-            diaryState.editingDate = null;
-            entryEditor.open = false;
-        });
-
-        document.getElementById('delete-entry').addEventListener('click', () => {
-            const index = diaryState.entries.findIndex((entry) => entry.date === diaryState.currentDate);
-            if (index < 0) return;
-            const entry = diaryState.entries[index];
-            if (!window.confirm(`删除「${entry.date} ${entry.title}」？此操作只修改当前浏览器中的草稿。`)) return;
-            diaryState.entries.splice(index, 1);
-            const nextDate = diaryState.entries[Math.min(index, diaryState.entries.length - 1)]?.date || null;
-            saveDraft();
-            renderCollection(nextDate);
-        });
-
-        function exportJson() {
-            const json = JSON.stringify(sortEntries(diaryState.entries), null, 2);
-            const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'diary.json';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-            backupStatus.textContent = `已导出 ${diaryState.entries.length} 篇日记的完整 JSON。请将 diary.json 下载文件备份，发布时替换仓库版本。`;
-        }
-        document.getElementById('export-json').addEventListener('click', exportJson);
-
-        document.getElementById('import-file').addEventListener('change', async (event) => {
-            const input = event.currentTarget;
-            const file = input.files?.[0];
-            if (!file) return;
-            try {
-                const data = JSON.parse(await file.text());
-                if (!Array.isArray(data)) throw new Error('JSON 根节点必须是日记数组。');
-                const entries = data.map(normalizeEntry);
-                if (entries.some((entry) => !entry)) throw new Error('有日记缺少有效日期或格式不正确，未导入任何内容。');
-                if (new Set(entries.map((entry) => entry.date)).size !== entries.length) {
-                    throw new Error('导入数据中有重复日期，请先修正后再导入。');
-                }
-                if (!window.confirm(`导入将替换当前列表并保存为本地草稿（${entries.length} 篇）。原始 diary.json 不会修改。继续吗？`)) return;
-                const previousDate = diaryState.currentDate;
-                diaryState.entries = sortEntries(entries);
-                const stored = saveDraft();
-                renderCollection(previousDate);
-                backupStatus.textContent = stored
-                    ? 'JSON 已导入为本地草稿。请检查内容并导出备份；发布时替换仓库 diary.json。'
-                    : 'JSON 已导入到当前页面，但浏览器无法保存草稿；请立即导出完整 JSON 备份。';
-            } catch (error) {
-                window.alert(`无法导入 JSON：${error.message}`);
-            } finally {
-                input.value = '';
-            }
-        });
-
         function validateStaticEntries(data) {
             const normalized = data.map(normalizeEntry).filter(Boolean);
-            const uniqueEntries = new Map(normalized.map((entry) => [entry.date, entry]));
-            return sortEntries([...uniqueEntries.values()]);
+            const byDate = new Map();
+            const duplicates = new Set();
+            normalized.forEach((entry) => {
+                if (byDate.has(entry.date)) duplicates.add(entry.date);
+                byDate.set(entry.date, entry);
+            });
+            if (duplicates.size) {
+                console.warn(`diary.json 存在重复日期，已保留最后一条：${[...duplicates].join('、')}`);
+            }
+            return sortEntries([...byDate.values()]);
         }
 
         async function loadDiaries() {
@@ -1124,14 +859,10 @@
             } else {
                 renderEmptyState(staticError
                     ? '暂时无法读取 diary.json。请确认文件存在、JSON 格式正确，并通过本地静态服务器打开本页。'
-                    : '还没有日记，可新增日记或导入完整 JSON。');
+                    : '还没有日记。');
                 renderDateTabs();
                 updateNavigation();
-                renderMonthOptions();
             }
-
-            const draft = readLocalDraft();
-            if (draft) showRestorePrompt(draft);
         }
 
         loadDiaries();

@@ -4,8 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>关于桃桃的日记本</title>
+    <script>
+        (function () {
+            try {
+                var theme = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) { /* Storage may be disabled. */ }
+        })();
+    </script>
     <style>
         :root {
+            color-scheme: light;
             --bg: #fffaf4;
             --surface: #fffefb;
             --surface-warm: #fff4ef;
@@ -18,6 +27,7 @@
         }
 
         [data-theme="dark"] {
+            color-scheme: dark;
             --bg: #292525;
             --surface: #332f2e;
             --surface-warm: #3b3432;
@@ -174,16 +184,8 @@
         <div class="section">
             <div class="section-bar"><span>🏠</span><span class="section-title">项目与封面</span></div>
             <div class="section-content">
-                <p lang="zh">桃桃日记本从仓库根目录的 <code>diary.json</code> 读取日记，可按日期浏览、搜索、按月归档并打印。首页配图使用 <code>assets/taotao-home.png</code>；日记配图是可选项，放在 <code>assets/</code> 中即可。</p>
-                <p lang="en">The diary reads entries from the repository's root <code>diary.json</code>. Browse by date, search, archive by month, and print. The home image is <code>assets/taotao-home.png</code>; optional entry images can live in <code>assets/</code>.</p>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-bar"><span>📝</span><span class="section-title">草稿、恢复与备份</span></div>
-            <div class="section-content">
-                <p lang="zh">首页可以新增、编辑、删除日记，也可以导入或导出完整 JSON。页面内的修改只保存在当前浏览器的 localStorage，不会自动改写仓库文件或同步到其他设备；下次访问时会询问是否恢复本地草稿。请定期导出 JSON 备份；要发布修改，请用导出的文件替换仓库里的 <code>diary.json</code>。</p>
-                <p lang="en">You can add, edit, and delete entries, or import and export the complete JSON file. Changes stay in this browser's localStorage; they do not update the repository file or sync to other devices. The page asks whether to restore a saved draft on your next visit. Export backups regularly, and replace the repository's <code>diary.json</code> with the exported file to publish changes.</p>
+                <p lang="zh">桃桃日记本从仓库根目录的 <code>diary.json</code> 读取日记，可按日期浏览、用弹层日历按月份查找并打印。首页配图使用 <code>assets/taotao-home.png</code>；日记配图是可选项，放在 <code>assets/</code> 中即可。</p>
+                <p lang="en">The diary reads entries from the repository's root <code>diary.json</code>. Browse by date, find days in a monthly pop-up calendar, and print. The home image is <code>assets/taotao-home.png</code>; optional entry images can live in <code>assets/</code>.</p>
             </div>
         </div>
 
@@ -201,16 +203,11 @@
     </div>
 
     <script>
-        function readTheme() {
-            try { return localStorage.getItem('theme') || 'light'; } catch { return 'light'; }
-        }
-
         function saveTheme(theme) {
             try { localStorage.setItem('theme', theme); } catch { /* Storage may be disabled. */ }
         }
 
-        const savedTheme = readTheme();
-        document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : 'light');
+        const savedTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
         updateThemeButton(savedTheme);
 
         function setLang(lang) {
