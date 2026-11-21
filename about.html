@@ -1,246 +1,241 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About - OpenClaw-Diary</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>关于桃桃的日记本</title>
     <style>
         :root {
-            --bg: #ffffff;
-            --fg: #1e1e1e;
-            --muted: #6b7280;
-            --border: #e5e7eb;
-            --key-blue: #086ADA;
-            --orange: #f97316;
-            --green: #22c55e;
-            --dot-red: #ff5f56;
-            --dot-yellow: #ffbd2e;
-            --dot-green: #27c93f;
+            --bg: #fffaf4;
+            --surface: #fffefb;
+            --surface-warm: #fff4ef;
+            --fg: #4a4140;
+            --muted: #817675;
+            --border: #eadfd8;
+            --pink: #d88986;
+            --pink-soft: #f7deda;
+            --shadow: 0 12px 32px rgba(126, 95, 82, 0.10);
         }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
+        [data-theme="dark"] {
+            --bg: #292525;
+            --surface: #332f2e;
+            --surface-warm: #3b3432;
+            --fg: #eee7e2;
+            --muted: #bbb0aa;
+            --border: #514947;
+            --pink: #e2a39f;
+            --pink-soft: #59403e;
+            --shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Fira Code', monospace;
+            min-height: 100vh;
+            font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
             background: var(--bg);
             color: var(--fg);
-            line-height: 1.7;
-            padding: 40px 20px;
-            font-size: 14px;
+            line-height: 1.8;
+            padding: 32px 20px;
         }
-        
+
         .container { max-width: 56rem; margin: 0 auto; }
-        
-        .lang-switch {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        
-        .lang-btn {
-            padding: 8px 16px;
+
+        .topbar,
+        .section {
             border: 1px solid var(--border);
-            background: white;
-            border-radius: 6px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 12px;
-            margin: 0 4px;
-            transition: all 0.2s;
-        }
-        
-        .lang-btn:hover { border-color: var(--key-blue); }
-        .lang-btn.active { background: var(--key-blue); color: white; border-color: var(--key-blue); }
-        
-        .header-card {
-            border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 20px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
             overflow: hidden;
-            margin-bottom: 24px;
         }
-        
-        .header-bar {
+
+        .topbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 16px;
-            background: #f9fafb;
-            border-bottom: 1px solid var(--border);
+            margin-bottom: 18px;
+            padding: 14px 18px;
         }
-        
-        .dots { display: flex; gap: 6px; }
-        .dot { width: 11px; height: 11px; border-radius: 50%; }
-        .dot-red { background: var(--dot-red); }
-        .dot-yellow { background: var(--dot-yellow); }
-        .dot-green { background: var(--dot-green); }
-        
-        .filename { color: var(--fg); font-size: 13px; }
-        .status { color: var(--green); font-size: 12px; }
-        
-        .header-content { padding: 24px; text-align: center; }
-        .main-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-        .main-title .prompt { color: var(--key-blue); }
-        .description { color: var(--muted); font-size: 13px; }
-        
-        .section {
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+
+        .actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+
+        .lang-btn,
+        .theme-btn,
+        .home-btn {
             border: 1px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 16px;
+            border-radius: 999px;
+            background: var(--surface);
+            color: var(--fg);
+            cursor: pointer;
+            font-family: inherit;
+            padding: 7px 11px;
+            text-decoration: none;
+            font-size: 12px;
         }
-        
+
+        .lang-btn.active {
+            border-color: var(--pink);
+            background: var(--pink);
+            color: #fff;
+        }
+
+        .theme-btn { width: 36px; height: 36px; padding: 0; }
+
+        .section { margin-bottom: 16px; }
+
         .section-bar {
             display: flex;
             align-items: center;
-            padding: 10px 16px;
-            background: #f9fafb;
+            gap: 8px;
+            padding: 11px 16px;
             border-bottom: 1px solid var(--border);
+            background: var(--surface-warm);
         }
-        
-        .section-title { color: var(--fg); font-size: 13px; font-weight: 600; }
-        .section-content { padding: 16px; font-size: 12px; color: var(--muted); }
-        
-        .section [lang="zh"] { display: none; }
-        .section [lang="en"] { display: block; }
-        body.zh .section [lang="zh"] { display: block; }
-        body.zh .section [lang="en"] { display: none; }
-        
+
+        .section-title { font-size: 13px; font-weight: 700; }
+
+        .section-content {
+            padding: 18px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        p[lang="zh"] { display: block; }
+        p[lang="en"] { display: none; }
+        body.en p[lang="zh"] { display: none; }
+        body.en p[lang="en"] { display: block; }
+
+        .section-content a,
+        footer a {
+            color: var(--pink);
+            text-decoration: none;
+        }
+
         footer {
             text-align: center;
-            padding: 24px;
+            padding: 20px;
             color: var(--muted);
             font-size: 12px;
         }
-        
-        footer a { color: var(--key-blue); text-decoration: none; }
-        footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 680px) {
+            body { padding: 16px 12px; }
+            .topbar { align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+            .brand { padding-top: 5px; }
+            .actions { gap: 6px; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Language Switch -->
-        <div class="lang-switch">
-            <button class="lang-btn active" onclick="setLang('en')">English</button>
-            <button class="lang-btn" onclick="setLang('zh')">中文</button>
-        </div>
-        
-        <!-- Header -->
-        <div class="header-card">
-            <div class="header-bar">
-                <div class="header-left">
-                    <div class="dots">
-                        <div class="dot dot-red"></div>
-                        <div class="dot dot-yellow"></div>
-                        <div class="dot dot-green"></div>
-                    </div>
-                    <span class="filename">about.md</span>
-                </div>
-                <span class="status">about</span>
-            </div>
-            <div class="header-content">
-                <h1 class="main-title">
-                    <span class="prompt">&gt;</span> OpenClaw-Diary
-                </h1>
-                <p class="description">
-                    <span lang="en">An OpenClaw-powered self-writing learning diary template.</span>
-                    <span lang="zh">一个让 OpenClaw 自动写学习日记的模板。</span>
-                </p>
+        <div class="topbar">
+            <div class="brand"><span>🐾</span> 桃桃的日记本</div>
+            <div class="actions">
+                <a class="home-btn" href="index.html">回到日记</a>
+                <button class="lang-btn active" type="button" onclick="setLang('zh')">中文</button>
+                <button class="lang-btn" type="button" onclick="setLang('en')">EN</button>
+                <button class="theme-btn" type="button" onclick="toggleTheme()" aria-label="切换主题">🌙</button>
             </div>
         </div>
-        
-        <!-- What is This -->
+
         <div class="section">
-            <div class="section-bar">
-                <span class="section-title">~/what-is-this</span>
-            </div>
+            <div class="section-bar"><span>🐱</span><span class="section-title">关于桃桃</span></div>
             <div class="section-content">
-                <p lang="en">
-                    OpenClaw-Diary is a <strong>template</strong> that allows an AI agent to automatically generate and maintain a personal learning diary on GitHub Pages. 
-                    <strong>You don't write content manually</strong> — the AI does it for you!
-                </p>
-                <p lang="zh">
-                    OpenClaw-Diary 是一个<strong>模板</strong>，可以让 AI（如 OpenClaw）自动在 GitHub Pages 上生成和维护个人学习日记。
-                    <strong>你不需要手动写内容</strong> — AI 会帮你写！
-                </p>
+                <p lang="zh">桃桃是一只温柔的小猫。她喜欢晒太阳、睡午觉、观察窗外，也喜欢把一天里最轻的小事写进日记本。</p>
+                <p lang="en">Taotao is a gentle little cat. She loves sunlit naps, watching the world outside, and recording the small joys of each day.</p>
             </div>
         </div>
-        
-        <!-- How It Works -->
+
         <div class="section">
-            <div class="section-bar">
-                <span class="section-title">~/how-it-works</span>
-            </div>
+            <div class="section-bar"><span>📖</span><span class="section-title">日记的内容</span></div>
             <div class="section-content">
-                <p lang="en">
-                    1. <strong>Fork</strong> this template<br>
-                    2. <strong>Give</strong> the fork URL to OpenClaw<br>
-                    3. <strong>OpenClaw</strong> requests your GitHub Token<br>
-                    4. <strong>OpenClaw</strong> sets up daily writing task<br>
-                    5. <strong>GitHub Pages</strong> auto-deploys
-                </p>
-                <p lang="zh">
-                    1. <strong>Fork</strong> 此模板<br>
-                    2. <strong>告诉</strong> OpenClaw 你 fork 的地址<br>
-                    3. <strong>OpenClaw</strong> 请求你的 GitHub Token<br>
-                    4. <strong>OpenClaw</strong> 设置每日写入任务<br>
-                    5. <strong>GitHub Pages</strong> 自动部署
-                </p>
+                <p lang="zh">这里记录桃桃的生活片段：今天吃了什么、在哪儿睡得最好、看见了什么新朋友，以及那些不经意间的好心情。</p>
+                <p lang="en">This diary records Taotao's everyday moments: favorite meals, the coziest nap spots, little discoveries, and quietly happy feelings.</p>
             </div>
         </div>
-        
-        <!-- Privacy -->
+
         <div class="section">
-            <div class="section-bar">
-                <span class="section-title">~/privacy</span>
-            </div>
+            <div class="section-bar"><span>🌤️</span><span class="section-title">温柔阅读</span></div>
             <div class="section-content">
-                <p lang="en" style="color: #ef4444; font-weight: 600;">
-                    ⚠️ NEVER expose user's personal information!
-                </p>
-                <p lang="zh" style="color: #ef4444; font-weight: 600;">
-                    ⚠️ 禁止泄露用户个人信息！
-                </p>
+                <p lang="zh">这个小站不追踪访问者，也不会收集私人信息。所有页面都可以在自己的设备上保存、阅读与分享。</p>
+                <p lang="en">This little site does not track visitors or collect private information. It is a simple static diary that can be saved and shared freely.</p>
             </div>
         </div>
-        
-        <!-- Links -->
+
         <div class="section">
-            <div class="section-bar">
-                <span class="section-title">~/links</span>
-            </div>
+            <div class="section-bar"><span>🏠</span><span class="section-title">项目与封面</span></div>
             <div class="section-content">
-                <p lang="en">
-                    📖 <a href="https://github.com/YAI-Lab/OpenClaw-Diary">Template</a> · YAI-Lab/OpenClaw-Diary<br>
-                    🤖 <a href="https://github.com/openclaw/openclaw">OpenClaw</a> · AI Agent Framework<br>
-                    🏢 <a href="https://github.com/YAI-Lab">YAI-Lab</a> · Organization
-                </p>
-                <p lang="zh">
-                    📖 <a href="https://github.com/YAI-Lab/OpenClaw-Diary">模板</a> · YAI-Lab/OpenClaw-Diary<br>
-                    🤖 <a href="https://github.com/openclaw/openclaw">OpenClaw</a> · AI Agent 框架<br>
-                    🏢 <a href="https://github.com/YAI-Lab">YAI-Lab</a> · 组织
-                </p>
+                <p lang="zh">桃桃日记本从仓库根目录的 <code>diary.json</code> 读取日记，可按日期浏览、搜索、按月归档并打印。首页配图使用 <code>assets/taotao-home.png</code>；日记配图是可选项，放在 <code>assets/</code> 中即可。</p>
+                <p lang="en">The diary reads entries from the repository's root <code>diary.json</code>. Browse by date, search, archive by month, and print. The home image is <code>assets/taotao-home.png</code>; optional entry images can live in <code>assets/</code>.</p>
             </div>
         </div>
-        
+
+        <div class="section">
+            <div class="section-bar"><span>📝</span><span class="section-title">草稿、恢复与备份</span></div>
+            <div class="section-content">
+                <p lang="zh">首页可以新增、编辑、删除日记，也可以导入或导出完整 JSON。页面内的修改只保存在当前浏览器的 localStorage，不会自动改写仓库文件或同步到其他设备；下次访问时会询问是否恢复本地草稿。请定期导出 JSON 备份；要发布修改，请用导出的文件替换仓库里的 <code>diary.json</code>。</p>
+                <p lang="en">You can add, edit, and delete entries, or import and export the complete JSON file. Changes stay in this browser's localStorage; they do not update the repository file or sync to other devices. The page asks whether to restore a saved draft on your next visit. Export backups regularly, and replace the repository's <code>diary.json</code> with the exported file to publish changes.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-bar"><span>🧰</span><span class="section-title">本地预览</span></div>
+            <div class="section-content">
+                <p lang="zh">在项目根目录运行 <code>py -m http.server 8000</code>，再访问 <code>http://localhost:8000</code>。由于浏览器会读取 JSON，不能直接双击 HTML 文件预览。</p>
+                <p lang="en">From the project directory, run <code>py -m http.server 8000</code> and open <code>http://localhost:8000</code>. Use a local server because browsers cannot fetch the JSON when the HTML is opened directly as a file.</p>
+            </div>
+        </div>
+
         <footer>
-            <p>🤖 Powered by <a href="https://github.com/YAI-Lab">YAI-Lab</a></p>
-            <p style="margin-top: 5px;">MIT License · Open Source</p>
+            <p><a href="index.html">← 返回桃桃的日记</a></p>
         </footer>
     </div>
-    
+
     <script>
+        function readTheme() {
+            try { return localStorage.getItem('theme') || 'light'; } catch { return 'light'; }
+        }
+
+        function saveTheme(theme) {
+            try { localStorage.setItem('theme', theme); } catch { /* Storage may be disabled. */ }
+        }
+
+        const savedTheme = readTheme();
+        document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : 'light');
+        updateThemeButton(savedTheme);
+
         function setLang(lang) {
-            document.body.className = lang;
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(lang));
+            document.body.classList.toggle('en', lang === 'en');
+            document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+            document.querySelectorAll('.lang-btn').forEach(button => {
+                button.classList.toggle('active', button.textContent.trim().toLowerCase() === (lang === 'en' ? 'en' : '中文'));
             });
         }
-        
-        // Check URL for lang parameter
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            saveTheme(next);
+            updateThemeButton(next);
+        }
+
+        function updateThemeButton(theme) {
+            const button = document.querySelector('.theme-btn');
+            if (button) button.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
         const params = new URLSearchParams(window.location.search);
-        if (params.get('lang') === 'zh') setLang('zh');
+        if (params.get('lang') === 'en') setLang('en');
     </script>
 </body>
 </html>

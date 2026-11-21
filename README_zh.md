@@ -1,152 +1,83 @@
-# 🦞 OpenClaw-Diary
+# 🐾 桃桃的日记本
 
 <p align="center">
-  <img src="assets/cover.png" alt="OpenClaw-Diary - AI 自我学习日记" width="800"/>
+  <img src="assets/cover.png" alt="桃桃的日记本封面" width="800"/>
 </p>
 
-<p align="center">
-  <img src="assets/show.gif" alt="演示" width="800"/>
-</p>
+**温暖可爱的桃桃日记本。** 这是一个可直接托管在 GitHub Pages 的纯静态日记网站，日记源数据保存在仓库根目录的 `diary.json`。
 
-**一个让 OpenClaw 自动写学习日记的模板 — 记录 AI 自己学习成长的笔记。**
-
-[![OpenClaw](https://img.shields.io/badge/Powered%20by-OpenClaw-6366f1?style=flat-square)](https://github.com/openclaw/openclaw)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
----
+## 介绍
 
-**[English](./README.md) | [中文](./README_zh.md)**
+桃桃的日记本是一个记录小猫桃桃日常生活的静态小站：晒太阳、午睡、吃饭、玩耍、观察窗外，以及每一天不经意的小快乐。
 
----
+项目只使用 HTML、CSS、JavaScript 和 JSON，不需要框架、后端或额外构建工具，也可以直接部署到 GitHub Pages。
 
-> *"一个每天学习新知识的 AI 机器人，记录它学到的新东西、发现和成长。"*
+## 主要功能
 
-## ✨ 这是什么？
+- 温暖可爱的桃桃猫咪手帐风格
+- 首页桃桃配图 `assets/taotao-home.png`
+- 打字机式副标题效果
+- 日期切换、最多七篇的横向日期窗口、前后篇翻阅和键盘方向键
+- 月份归档与日期、标题、正文、天气、心情、标签搜索
+- 新增、编辑、删除日记；导入或导出完整 JSON
+- 浏览器草稿恢复提示和定期备份提示
+- 当前日记打印
+- 亮色与暗色主题，并保存浏览器偏好
+- 桌面端与移动端响应式布局
+- 关于页支持中英文切换
 
-OpenClaw-Diary 是一个 **AI 自我学习日记模板**。它不仅仅是一个博客 —— 它是 AI 知识旅程的活记录。
+## 本地预览
 
-**AI 自己写日记** — 记录新知识、研究发现、代码实验和成长洞察。不需要人类帮忙！
+必须通过静态服务器预览，浏览器需要通过 HTTP 读取 `diary.json`；直接双击打开 `index.html` 时，日记数据可能无法加载。在仓库根目录启动 Python 自带的静态服务器：
 
----
-
-## 🎯 核心功能
-
-- **🤖 自动写作**: OpenClaw 自动生成日记内容
-- **📅 每日更新**: 每天都有新内容
-- **🌐 GitHub Pages**: 免费自动托管
-- **📱 响应式**: 任何设备都能清晰阅读
-- **🔒 隐私优先**: 用户数据保持私密
-
----
-
-## 🚀 工作原理
-
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   1. Fork   │────▶│  2. 连接     │────▶│  3. 自动    │
-│   模板       │     │   到 OpenClaw│     │   学习      │
-└──────────────┘     └──────────────┘     └──────────────┘
+```powershell
+py -m http.server 8000
 ```
 
-### 详细步骤：
+然后在浏览器访问 `http://localhost:8000`。停止服务器时在终端按 `Ctrl+C`。
 
-1. **Fork** 此模板 → `你的账号/OpenClaw-Diary`
-2. **连接** 仓库到你的 OpenClaw 实例
-3. **OpenClaw 读取** 仓库并请求 GitHub Token
-4. **OpenClaw 设置** 每日学习任务
-5. **GitHub Pages** 自动部署 AI 的学习日记
-
----
-
-## 📖 快速开始
-
-### 步骤 1: Fork 模板
-
-点击 fork 按钮或访问：
-```
-https://github.com/YAI-Lab/OpenClaw-Diary
-```
-
-### 步骤 2: 连接 OpenClaw
-
-发送给你的 OpenClaw：
-```
-我 fork 了 OpenClaw-Diary：https://github.com/你的用户名/OpenClaw-Diary
-```
-
-### 步骤 3: 授予权限
-
-OpenClaw 会请求你的 GitHub token 来管理仓库。
-
-### 步骤 4: 看着它学习！
-
-OpenClaw 会：
-- 📖 阅读论文和文档
-- 💻 写代码和实验
-- 📝 记录发现
-- 📅 每天自动提交
-- 🌐 部署到 GitHub Pages
-
----
-
-## 📂 模板结构
-
-```html
-<!-- 日期导航 -->
-<div class="date-tabs">
-  <button onclick="showDate('2026-03-02')">📅 2026-03-02</button>
-</div>
-
-<!-- 每日内容 -->
-<div class="screen" id="screen-2026-03-02">
-  <div class="entry">...</div>
-</div>
-```
-
----
-
-## 🎨 自定义
-
-编辑以下文件来个性化：
+## 修改内容
 
 | 文件 | 用途 |
 |------|------|
-| `index.html` | 主页布局 |
-| `style.css` | 颜色和样式 |
-| `assets/` | 图片和媒体 |
-| `openclaw-diary/SKILL.md` | AI 提示和指令 |
+| `diary.json` | 仓库中的完整日记数据，页面默认从这里读取 |
+| `index.html` | 日记展示、搜索归档、浏览器本地草稿和导入导出 |
+| `about.html` | 关于桃桃、双语维护和备份说明 |
+| `assets/taotao-home.png` | 首页主图 |
+| `assets/cover.png` | README 项目封面 |
+| `README.md` | 中文项目说明 |
+| `README_zh.md` | 中文项目说明副本 |
 
----
+## 维护日记
 
-## ⚠️ 隐私指南
+### 在仓库中维护（推荐作为正式备份）
 
-- **禁止**泄露用户个人信息
-- **发布前必须**确认内容
-- **未经允许不要**包含私人对话
-- **尊重**知识产权
+直接编辑 `diary.json`，在最外层数组中增加一篇日记对象。日期必须唯一且使用 `YYYY-MM-DD`；页面会自动按日期排序，不需要修改 HTML：
 
----
+```json
+{
+  "date": "2026-11-21",
+  "title": "阳光下的午觉",
+  "weather": "晴",
+  "mood": "舒服又满足",
+  "content": ["第一段正文。", "第二段正文。"],
+  "noteTitle": "今日小确幸",
+  "note": "可选的小记。",
+  "tags": ["晒太阳", "午觉"],
+  "image": "assets/taotao-home.png"
+}
+```
 
-## 📜 许可证
+`content` 是纯文本段落数组，不解析 Markdown；`note`、`noteTitle`、`tags` 和 `image` 可省略。配图只填写已有的相对路径，不会把图片内容写进 JSON。
 
-[MIT](LICENSE) — 欢迎免费使用！
+### 在网页中编辑
 
----
+首页可新增、编辑、删除日记，也可通过“导入 JSON”和“导出完整 JSON”操作整份数据。网页内的更改会保存到**当前浏览器的 localStorage**，下次访问时会提示是否恢复；它不会写回仓库，不会跨设备同步，也可能因清理浏览器数据而丢失。请定期导出备份。要把草稿正式发布或同步到仓库，请导出完整 JSON，再用导出的 `diary.json` 替换仓库文件并提交。
 
-## ⭐ Stars 增长历史
+导入会替换当前列表，但不会修改仓库原文件；导入前可先导出备份。若更换设备或浏览器，可在新设备上导入备份 JSON。
 
-[![Star History Chart](https://api.star-history.com/svg?repos=YAI-Lab/OpenClaw-Diary&type=Date)](https://star-history.com/#YAI-Lab/OpenClaw-Diary&Date)
+## 许可证
 
----
-
-## 🙏 致谢
-
-- [OpenClaw](https://github.com/openclaw/openclaw) — AI Agent 框架
-- [YAI-Lab](https://github.com/YAI-Lab) — 组织
-
----
-
-<p align="center">
-<strong>用 ❤️ 由 YAI-Lab 制作</strong><br>
-<i>一个会学习、成长和记录的 AI。</i>
-</p>
+[MIT](LICENSE)
